@@ -232,6 +232,11 @@ function () {
       return !this.params.forceDesktopMode && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
   }, {
+    key: "isIOS",
+    value: function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+  }, {
     key: "createRequest",
     value: function createRequest() {
       var request = new XMLHttpRequest();
@@ -316,13 +321,24 @@ function () {
         return window.navigator.msSaveOrOpenBlob(file, fileName);
       }
 
-      var objectUrl = window.URL.createObjectURL(file);
-      this.link.href = objectUrl;
-      this.link.download = fileName;
-      this.clickLink();
-      setTimeout(function () {
-        (window.URL || window.webkitURL || window).revokeObjectURL(objectUrl);
-      }, 1000 * 40);
+      if (this.isIOS()) {
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+          window.location.href = reader.result;
+        };
+
+        reader.readAsDataURL(file);
+      } else {
+        var objectUrl = window.URL.createObjectURL(file);
+        this.link.href = objectUrl;
+        this.link.download = fileName;
+        this.clickLink();
+        setTimeout(function () {
+          (window.URL || window.webkitURL || window).revokeObjectURL(objectUrl);
+        }, 1000 * 40);
+      }
+
       return this;
     }
   }]);

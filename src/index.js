@@ -88,8 +88,12 @@ class jsFileDownloader {
   }
 
   isMobile () {
-    return !this.params.forceDesktopMode && 
+    return !this.params.forceDesktopMode &&
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+
+  isIOS () {
+    return (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream);
   }
 
   createRequest () {
@@ -168,15 +172,25 @@ class jsFileDownloader {
       return window.navigator.msSaveOrOpenBlob(file, fileName);
     }
 
-    let objectUrl = window.URL.createObjectURL(file);
+    if (this.isIOS()) {
+      const reader = new FileReader();
 
-    this.link.href = objectUrl;
-    this.link.download = fileName;
-    this.clickLink();
+      reader.onload = function (e) {
+        window.location.href = reader.result;
+      };
 
-    setTimeout(() => {
-      (window.URL || window.webkitURL || window).revokeObjectURL(objectUrl);
-    }, 1000 * 40);
+      reader.readAsDataURL(file);
+    } else {
+      let objectUrl = window.URL.createObjectURL(file);
+
+      this.link.href = objectUrl;
+      this.link.download = fileName;
+      this.clickLink();
+
+      setTimeout(() => {
+        (window.URL || window.webkitURL || window).revokeObjectURL(objectUrl);
+      }, 1000 * 40);
+    }
 
     return this;
   }
